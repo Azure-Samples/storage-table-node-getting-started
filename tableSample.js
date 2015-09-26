@@ -112,7 +112,7 @@ function runAzureTableSamples(){
                                             throw error;
                                         } else {
                                             console.log("   Batch insert completed.");
-                                            console.log("6. Retrieving entities with surname of Smith and first names >= 1 and <= 75");
+                                            console.log("6. Retrieving entities with surname of Smith and first names > 1 and <= 75");
 
                                             var storageTableQuery = storage.TableQuery;
                                             var pageSize = 50;
