@@ -1,6 +1,7 @@
 ---
 services: storage
 platforms: node
+author: minet-MSFT
 ---
 
 # Azure Storage: Tables
