@@ -28,26 +28,26 @@ var storageClient = storage.createTableService(readConfig().connectionString);
 * 
 * Documentation References: 
 * - What is a Storage Account - http://azure.microsoft.com/en-us/documentation/articles/storage-whatis-account/
-* - Getting Started with Tables - https://azure.microsoft.com/en-us/documentation/articles/storage-nodejs-how-to-use-table-storage/
-* - Table Service Concepts - http://msdn.microsoft.com/en-us/library/dd179463.aspx
-* - Table Service REST API - http://msdn.microsoft.com/en-us/library/dd179423.aspx
-* - Table Service Node API - http://azure.github.io/azure-storage-node/TableService.html
-* - Storage Emulator - http://msdn.microsoft.com/en-us/library/azure/hh403989.aspx
+* - Getting Started with Tables https://azure.microsoft.com/en-us/documentation/articles/storage-nodejs-how-to-use-table-storage/
+* - Table Service Concepts -    http://msdn.microsoft.com/en-us/library/dd179463.aspx
+* - Table Service REST API -    http://msdn.microsoft.com/en-us/library/dd179423.aspx
+* - Table Service Node API -    http://azure.github.io/azure-storage-node/TableService.html
+* - Storage Emulator -          http://msdn.microsoft.com/en-us/library/azure/hh403989.aspx
 */ 
 runAzureTableSamples();
 
 function runAzureTableSamples(){
     /**
     *  Instructions: This sample can be run using either the Azure Storage Emulator that installs as part of this SDK - or by
-    *  updating the config.json file with your AccountName and Key. 
+    *  updating the config.json file with your connection string
     *   
     *  To run the sample using the Storage Emulator (default option)
     *       1. Start the Azure Storage Emulator (once only) by pressing the Start button or the Windows key and searching for it
     *          by typing "Azure Storage Emulator". Select it from the list of applications to start it.
     *  To run the sample using the Storage Service
     *       1. Open the config.json file and update storage account information (see step 2 for creating an account if you don't already have one.)
-    *       2. Create a Storage Account through the Azure Portal and provide your STORAGE_NAME and STORAGE_KEY in 
-    *          the config.json file. See http://go.microsoft.com/fwlink/?LinkId=325277 for more information
+    *       2. Create a Storage Account through the Azure Portal and provide your connection string in 
+    *          the config.json file. 
     *       3. Run application through Node.js command prompt by running command "npm start"
     *  
     */
@@ -55,11 +55,11 @@ function runAzureTableSamples(){
     console.log("Azure Storage Table Sample\n");
     console.log("1. Create a Table for the demo");
     
-    // Create or reference an existing table (Table name is provided in config.json and can be updated)
-    if(storageClient.createTableIfNotExists(tableName, function tableCreated(error) {
-        if(error) {
+    // Create or reference an existing table 
+    storageClient.createTableIfNotExists(tableName, function tableCreated(error, exists) {
+        if (error) {
             console.log("   If you are running with the default configuration please make sure you have started the storage emulator. Press the Windows key and type Azure Storage to select and run it from the list of applications - then restart the sample.");
-          throw error;
+            throw error;
         } else {
             console.log("2. Inserting or updating an entity using insertOrMergeEntity function.");
             var customer = createCustomerEntityDescriptor("Harp", "Walter", "Walter@contoso.com", "425-555-0101");
@@ -68,6 +68,13 @@ function runAzureTableSamples(){
                 if (error) {
                     throw error;
                 } else {
+
+                    if (exists) {
+                        console.log("   Table already exists: ", tableName);
+                    } else {
+                        console.log("   Created Table: ", tableName);
+                    }
+
                     console.log("   insertOrMergeEntity succeeded.");
                     console.log("3. Reading the updated entity.");
 
@@ -120,8 +127,8 @@ function runAzureTableSamples(){
                                             var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName).and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
 
                                             runPageQuery(pageSize, tableQuery, null, function () {
-                                                
-        
+
+
                                                 // Demonstrate a partition scan whereby we are searching for all the entities within a partition. 
                                                 // Note this is not as efficient as a range scan - but definitely more efficient than a full table scan. 
                                                 console.log("7. Retrieve entities with surname of %s.", lastName);
@@ -137,23 +144,18 @@ function runAzureTableSamples(){
                     });
                 }
             });
-    }
-    })) {
-
-        console.log("   Created Table: ", tableName);
-    } else {
-        console.log("   Table already exists: ", tableName);
-    }
+        }
+    });
 }
 
 /** 
-* Running a table query with specific page size and continuationToken
+* Runs a table query with specific page size and continuationToken
 * @ignore 
 * 
-* @param {int}                        pageSize            Number of entities returned by single query 
-* @param {TableQuery}                tableQuery            Query to execute
-* @param {TableContinuationToken}    continuationToken    Continuation token to continue a query
-* @param {function}                    callback            Additional sample operations to run after this one completes   
+* @param {int}                          pageSize                Number of entities returned by single query 
+* @param {TableQuery}                   tableQuery              Query to execute
+* @param {TableContinuationToken}       continuationToken       Continuation token to continue a query
+* @param {function}                     callback                Additional sample operations to run after this one completes   
 */ 
 function runPageQuery(pageSize, tableQuery, continuationToken, callback){
     
@@ -169,7 +171,7 @@ function runPageQuery(pageSize, tableQuery, continuationToken, callback){
             
             continuationToken = result.continuationToken; 
                if(continuationToken) { 
-                runPageQuery(pageSize, partitionKey, rowKeyStart, rowKeyEnd, continuationToken); 
+                   runPageQuery(pageSize, tableQuery, continuationToken, callback); 
                } else { 
                 console.log("   Query completed.");
                 callback();
@@ -229,9 +231,9 @@ function readConfig() {
 * Creates a customer entity to be used in library calls based on provided parameters
 * @ignore
 *
-* @param {string}    partitionKey    Last name of the customer 
-* @param {string}    rowKey            Name of the customer
-* @param {string}    email            Email of the customer
+* @param {string}    partitionKey       Last name of the customer 
+* @param {string}    rowKey             Name of the customer
+* @param {string}    email              Email of the customer
 * @param {string}    phone              Phone number of the customer
 * @return {Object}
 */
