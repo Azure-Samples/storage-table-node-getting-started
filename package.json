@@ -10,6 +10,11 @@
     "storage",
     "sample"
   ],
+  "keywords": [ 
+     "node", 
+     "azure", 
+     "storage" 
+  ], 
  "main": "./tableSample.js",
   "engines": {
     "node": ">= 0.8.26"
