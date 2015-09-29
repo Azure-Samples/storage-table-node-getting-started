@@ -56,16 +56,16 @@ function runAzureTableSamples(){
   console.log("1. Create a Table for the demo");
   
   // Create or reference an existing table 
-  storageClient.createTableIfNotExists(tableName, function tableCreated(error, exists) {
+  storageClient.createTableIfNotExists(tableName, function tableCreated(error, created) {
     if (error) {
       console.log("   If you are running with the default configuration please make sure you have started the storage emulator. Press the Windows key and type Azure Storage to select and run it from the list of applications - then restart the sample.");
       throw error;
     } else {
 
-      if (exists) {
-        console.log("   Table already exists: ", tableName);
-      } else {
+      if (created) {
         console.log("   Created Table: ", tableName);
+      } else {
+        console.log("   Table already exists: ", tableName);
       }
 
       console.log("2. Inserting or updating an entity using insertOrMergeEntity function.");
