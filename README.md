@@ -4,7 +4,7 @@ platforms: nodejs
 author: minet-MSFT
 ---
 
-# Azure Storage: Tables
+# Getting Started with Azure Table Service in Node.js
 Demonstrates how to perform common tasks using the Microsoft Azure Table storage 
 including creating a table, CRUD operations, batch operations and different querying techniques. 
 
