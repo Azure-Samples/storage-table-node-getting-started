@@ -22,39 +22,38 @@ var config = require('./config.js');
 var entityGen;
 var tableService;
 
-function AdvancedAzureTableSamples(){
-    entityGen = storage.TableUtilities.entityGenerator;
-    tableService = storage.createTableService(config.connectionString);
-    
-    return scenarios = [
-        {
-            action: listAllTables,
-            message: 'Azure Table Advanced Sample\n'
-        }
-    ];
+function AdvancedAzureTableSamples() {
+  entityGen = storage.TableUtilities.entityGenerator;
+  tableService = storage.createTableService(config.connectionString);
+
+  return scenarios = [
+    {
+      action: listAllTables,
+      message: 'Azure Table Advanced Sample\n'
+    }
+  ];
 }
 
-function listAllTables(callback)
-{
-    tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g,''), function(error, created){
-        if(error) return callback(error);
-        
-        tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g,''), function(error, created){
-            if(error) return callback(error);
-            
-            listTables(tableService, null, { maxResults: 100 }, function(error, tables) {
-                if(error) return callback(error);
-                
-                tables.forEach(function (table) {
-                    console.log("Table: " + table);
-                    
-                    tableService.deleteTable(table, null, function (error) {
-                        if(!error) console.log('Table ' + table + ' deleted.');
-                    })
-                })
-            })
+function listAllTables(callback) {
+  tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g, ''), function (error, created) {
+    if (error) return callback(error);
+
+    tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g, ''), function (error, created) {
+      if (error) return callback(error);
+
+      listTables(tableService, null, { maxResults: 100 }, null, function (error, tables) {
+        if (error) return callback(error);
+
+        tables.forEach(function (table) {
+          console.log("Table: " + table);
+
+          tableService.deleteTable(table, null, function (error) {
+            if (!error) console.log('Table ' + table + ' deleted.');
+          })
         })
+      })
     })
+  })
 };
 
 /**
@@ -72,17 +71,17 @@ function listAllTables(callback)
 *                                                                 `entries`  gives a list of tables and the `continuationToken` is used for the next listing operation.
 *                                                                 `response` will contain information related to this operation.
 */
-function listTables (tableService, token, options, callback) {
-  var tables = [];
-  
-  tableService.listTablesSegmented(token, options, function(error, result) {
-    
+function listTables(tableService, token, options, tables, callback) {
+  tables = tables || [];
+
+  tableService.listTablesSegmented(token, options, function (error, result) {
+
     if (error) return callback(error, null, tableService);
-    
+
     tables.push.apply(tables, result.entries);
-    
+
     var token = result.continuationToken;
-    
+
     if (token) {
       console.log('   Received a page of results. There are ' + result.entries.length + ' tables on this page.');
       listTables(tableService, token, options, callback);

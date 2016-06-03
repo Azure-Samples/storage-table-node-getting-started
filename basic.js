@@ -23,30 +23,27 @@ var entityGen;
 var storageClient;
 var tableName;
 
-function BasicAzureTableSamples(){
-    
-    entityGen = storage.TableUtilities.entityGenerator;
-    storageClient = storage.createTableService(config.connectionString);
-    tableName = "Customers" + guid.v1().replace(/-/g,'');
+function BasicAzureTableSamples() {
 
-    return scenarios = [
+  entityGen = storage.TableUtilities.entityGenerator;
+  storageClient = storage.createTableService(config.connectionString);
+  tableName = "Customers" + guid.v1().replace(/-/g, '');
+
+  return scenarios = [
     {
-        action: basicTableOperations,
-        message: 'Azure Table Basic Sample\n'
+      action: basicTableOperations,
+      message: 'Azure Table Basic Sample\n'
     }
   ];
 }
 
-function basicTableOperations(callback)
-{
+function basicTableOperations(callback) {
   // Create or reference an existing table 
-  storageClient.createTableIfNotExists(tableName, function tableCreated(error, created) {
+  storageClient.createTableIfNotExists(tableName, function tableCreated(error, createResult) {
     if (error) return callback(error);
-    
-    if (created) {
-      console.log("   Created Table: ", tableName);
-    } else {
-      console.log("   Table already exists: ", tableName);
+
+    if (createResult.isSuccessful) {
+      console.log("   Create Table operation executed successfuly for: ", tableName);
     }
 
     console.log("2. Inserting or updating an entity using insertOrMergeEntity function.");
@@ -54,78 +51,78 @@ function basicTableOperations(callback)
 
     storageClient.insertOrMergeEntity(tableName, customer, function (error, result, response) {
       if (error) return callback(error);
-      
+
       console.log("   insertOrMergeEntity succeeded.");
-      
+
       console.log("3. Reading the updated entity.");
 
       // Demonstrate the most efficient storage query - the point query - where both partition key and row key are specified. 
       storageClient.retrieveEntity(tableName, customer.PartitionKey._, customer.RowKey._, function (error, result) {
+        if (error) return callback(error);
+
+        console.log("   retrieveEntity succeeded: ", result.PartitionKey._, result.RowKey._, result.email._, result.phone._);
+
+        console.log("4. Deleting the entity. ");
+
+        storageClient.deleteEntity(tableName, customer, function entitiesQueried(error, result) {
           if (error) return callback(error);
-            
-          console.log("   retrieveEntity succeeded: ", result.PartitionKey._, result.RowKey._, result.email._, result.phone._);
-          
-          console.log("4. Deleting the entity. ");
 
-          storageClient.deleteEntity(tableName, customer, function entitiesQueried(error, result) {
+          console.log("   deleteEntity succeeded.");
+
+          // Demonstrates upsert and batch table operations
+          console.log("5. Inserting a batch of entities. ");
+
+          // create batch operation
+          var batch = new storage.TableBatch();
+          var lastName = "Smith";
+
+          // The following code  generates test data for use during the query samples.  
+          for (var i = 0; i < 100; i++) {
+            var name = zeroPaddingString(i, 4);
+            var customerToInsert = createCustomerEntityDescriptor(lastName, name, name + "@contoso.com", "425-555-" + name)
+
+            batch.insertEntity(customerToInsert);
+          }
+
+          //  Demonstrate inserting of a large batch of entities. Some considerations for batch operations:
+          //  1. You can perform updates, deletes, and inserts in the same single batch operation.
+          //  2. A single batch operation can include up to 100 entities.
+          //  3. All entities in a single batch operation must have the same partition key.
+          //  4. While it is possible to perform a query as a batch operation, it must be the only operation in the batch.
+          //  5. Batch size must be <= 4MB  
+          storageClient.executeBatch(tableName, batch, function (error, result, response) {
             if (error) return callback(error);
-                
-            console.log("   deleteEntity succeeded.");
 
-            // Demonstrates upsert and batch table operations
-            console.log("5. Inserting a batch of entities. ");
+            console.log("   Batch insert completed.");
+            console.log("6. Retrieving entities with surname of Smith and first names > 1 and <= 75");
 
-            // create batch operation
-            var batch = new storage.TableBatch();
-            var lastName = "Smith";
+            var storageTableQuery = storage.TableQuery;
+            var pageSize = 50;
 
-            // The following code  generates test data for use during the query samples.  
-            for (var i = 0; i < 100; i++) {
-                var name = zeroPaddingString(i, 4);
-                var customerToInsert = createCustomerEntityDescriptor(lastName, name, name + "@contoso.com", "425-555-" + name)
+            // Demonstrate a partition range query whereby we are searching within a partition for a set of entities that are within a specific range. 
+            var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName).and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
 
-                batch.insertEntity(customerToInsert);
-            }
+            runPageQuery(pageSize, tableQuery, null, function () {
+              // Demonstrate a partition scan whereby we are searching for all the entities within a partition. 
+              // Note this is not as efficient as a range scan - but definitely more efficient than a full table scan. 
+              console.log("7. Retrieve entities with surname of %s.", lastName);
 
-            //  Demonstrate inserting of a large batch of entities. Some considerations for batch operations:
-            //  1. You can perform updates, deletes, and inserts in the same single batch operation.
-            //  2. A single batch operation can include up to 100 entities.
-            //  3. All entities in a single batch operation must have the same partition key.
-            //  4. While it is possible to perform a query as a batch operation, it must be the only operation in the batch.
-            //  5. Batch size must be <= 4MB  
-            storageClient.executeBatch(tableName, batch, function (error, result, response) {
-              if (error) return callback(error);
-                  
-              console.log("   Batch insert completed.");
-              console.log("6. Retrieving entities with surname of Smith and first names > 1 and <= 75");
+              var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName);
 
-              var storageTableQuery = storage.TableQuery;
-              var pageSize = 50;
-              
-              // Demonstrate a partition range query whereby we are searching within a partition for a set of entities that are within a specific range. 
-              var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName).and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
-              
               runPageQuery(pageSize, tableQuery, null, function () {
-                  // Demonstrate a partition scan whereby we are searching for all the entities within a partition. 
-                  // Note this is not as efficient as a range scan - but definitely more efficient than a full table scan. 
-                  console.log("7. Retrieve entities with surname of %s.", lastName);
+                storageClient.deleteTable(tableName, function (error, response) {
+                  if (error) return callback(error);
 
-                  var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName);
+                  console.log("   deleteTable succeeded.");
 
-                  runPageQuery(pageSize, tableQuery, null, function() {
-                    storageClient.deleteTable(tableName, function(error, response){
-                      if(error) return callback(error);
-                      
-                      console.log("   deleteTable succeeded.");
-                      
-                      callback(); 
-                    });
-                  });
+                  callback();
+                });
               });
             });
           });
         });
       });
+    });
   });
 };
 
@@ -137,25 +134,25 @@ function basicTableOperations(callback)
 * @param {TableQuery}             tableQuery        Query to execute
 * @param {TableContinuationToken} continuationToken Continuation token to continue a query
 * @param {function}               callback          Additional sample operations to run after this one completes   
-*/ 
-function runPageQuery(pageSize, tableQuery, continuationToken, callback){
-  
+*/
+function runPageQuery(pageSize, tableQuery, continuationToken, callback) {
+
   tableQuery.TakeCount = pageSize;
-  storageClient.queryEntities(tableName, tableQuery, continuationToken, function (error, result) { 
-    if(error) return callback(error);
-      
-    var entities = result.entries; 
-    entities.forEach(function (entity) { 
-      console.log("  Customer: %s,%s,%s,%s",entity.PartitionKey._, entity.RowKey._, entity.email._, entity.phone._)
-    }); 
-      
-    continuationToken = result.continuationToken; 
-      if(continuationToken) { 
-        runPageQuery(pageSize, tableQuery, continuationToken, callback); 
-      } else { 
-        console.log("   Query completed.");
-        callback();
-      } 
+  storageClient.queryEntities(tableName, tableQuery, continuationToken, function (error, result) {
+    if (error) return callback(error);
+
+    var entities = result.entries;
+    entities.forEach(function (entity) {
+      console.log("  Customer: %s,%s,%s,%s", entity.PartitionKey._, entity.RowKey._, entity.email._, entity.phone._)
+    });
+
+    continuationToken = result.continuationToken;
+    if (continuationToken) {
+      runPageQuery(pageSize, tableQuery, continuationToken, callback);
+    } else {
+      console.log("   Query completed.");
+      callback();
+    }
   });
 }
 
@@ -166,15 +163,15 @@ function runPageQuery(pageSize, tableQuery, continuationToken, callback){
 * @param {string}   str              The input string. 
 * @param {int}      len              The length of the string. 
 * @return {string} 
-*/ 
-function zeroPaddingString(str, len) { 
-  var paddingStr = '0000000000' + str; 
-  if(paddingStr.length < len) { 
-    return zeroPaddingString(paddingStr, len); 
-  } else { 
-    return paddingStr.substr(-1 * len); 
-  } 
-} 
+*/
+function zeroPaddingString(str, len) {
+  var paddingStr = '0000000000' + str;
+  if (paddingStr.length < len) {
+    return zeroPaddingString(paddingStr, len);
+  } else {
+    return paddingStr.substr(-1 * len);
+  }
+}
 
 
 

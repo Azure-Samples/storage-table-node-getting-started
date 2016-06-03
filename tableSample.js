@@ -14,8 +14,8 @@
 // places, or events is intended or should be inferred.
 //----------------------------------------------------------------------------------
 
-basicAzureTableSamples = require('./basic.js');
-advancedAzureTableSamples = require('./advanced.js');
+basicScenarios = require('./basic.js');
+advancedScenarios = require('./advanced.js');
 
 /**
 * Azure Table Service Sample - Demonstrate how to perform common tasks using the Microsoft Azure Table storage 
@@ -29,45 +29,40 @@ advancedAzureTableSamples = require('./advanced.js');
 * - Table Service Node API -  http://azure.github.io/azure-storage-node/TableService.html
 * - Storage Emulator -      http://msdn.microsoft.com/en-us/library/azure/hh403989.aspx
 */
- 
+
 runAzureTableSamples();
 
-function runAzureTableSamples(){
+function runAzureTableSamples() {
   /**
-  *  Instructions: This sample can be run using either the Azure Storage Emulator that installs as part of this SDK - or by
-  *  updating the config.json file with your connection string
-  *   
-  *  To run the sample using the Storage Emulator (default option)
-  *   1. Start the Azure Storage Emulator (once only) by pressing the Start button or the Windows key and searching for it
-  *    by typing "Azure Storage Emulator". Select it from the list of applications to start it.
-  *  To run the sample using the Storage Service
-  *   1. Open the config.json file and update storage account information (see step 2 for creating an account if you don't already have one.)
-  *   2. Create a Storage Account through the Azure Portal and provide your connection string in 
-  *    the config.json file. 
-  *   3. Run application through Node.js command prompt by running command "npm start"
-  *  
-  */
+   * Instructions: This sample can be run using either the Azure Storage Emulator that installs as part of the Microsoft Azure SDK, which is available in Windows only - or by  
+   * updating the app.config file with your connection string.
+   *
+   * To run the sample using the Storage Emulator (Microsoft Azure SDK)
+   *      Start the Azure Storage Emulator (once only) by pressing the Start button or the Windows key and searching for it
+   *      by typing "Azure Storage Emulator". Select it from the list of applications to start it.
+   * 
+   * To run the sample using the Storage Service
+   *      Open the app.config file and comment out the connection string for the emulator ("useDevelopmentStorage":true) and
+   *      set the connection string for the storage service.
+   */
   console.log('\nAzure Table Sample\n');
-  
-  var counter = 0;
-  
-  basicAzureTableSamples.forEach(function(scenario) {
-    console.log(scenario.message);
-    
-    scenario.action(function(error) {
-      if(error) throw error;
-      
-      counter++;
-      
-      if(counter == basicAzureTableSamples.length) {
-        advancedAzureTableSamples.forEach(function(scenario) {
-          console.log(scenario.message);
-    
-          scenario.action(function(error) {
-            if(error) throw error;
-          })
-        })
+
+  var scenarios = basicScenarios.concat(advancedScenarios);
+
+  var current = 0;
+
+  var callback = function (error) {
+    if (error) {
+      throw error;
+    } else {
+      console.log(scenarios[current].message);
+
+      current++;
+      if (current < scenarios.length) {
+        scenarios[current].action(callback);
       }
-    })
-  })
+    }
+  };
+
+  scenarios[current].action(callback);
 }
