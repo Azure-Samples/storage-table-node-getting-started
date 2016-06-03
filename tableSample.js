@@ -44,6 +44,9 @@ function runAzureTableSamples() {
    * To run the sample using the Storage Service
    *      Open the app.config file and comment out the connection string for the emulator ("useDevelopmentStorage":true) and
    *      set the connection string for the storage service.
+   *
+   * Note: The Shared Access Signature sample currently does not work with Emulator for a well know issue in the azure-storage library. If you are planning to run
+   * this sample, please use the Storage Service.
    */
   console.log('\nAzure Table Sample\n');
 
