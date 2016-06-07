@@ -117,7 +117,7 @@ function basicTableOperations(callback) {
                 .top(segmentSize)
                 .where('PartitionKey eq ?', lastName);
 
-              runPageQuery(tableQuery, null, function () {
+              runPageQuery(tableQuery, null, function (error) {
 
                 if (error) return callback(error);
 
