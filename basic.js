@@ -97,19 +97,30 @@ function basicTableOperations(callback) {
             console.log("6. Retrieving entities with surname of Smith and first names > 1 and <= 75");
 
             var storageTableQuery = storage.TableQuery;
-            var pageSize = 50;
+            var segmentSize = 10;
 
             // Demonstrate a partition range query whereby we are searching within a partition for a set of entities that are within a specific range. 
-            var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName).and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
+            var tableQuery = new storageTableQuery()
+              .top(segmentSize)
+              .where('PartitionKey eq ?', lastName)
+              .and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
 
-            runPageQuery(pageSize, tableQuery, null, function () {
+            runPageQuery(tableQuery, null, function (error) {
+
+              if (error) return callback(error);
+
               // Demonstrate a partition scan whereby we are searching for all the entities within a partition. 
               // Note this is not as efficient as a range scan - but definitely more efficient than a full table scan. 
               console.log("7. Retrieve entities with surname of %s.", lastName);
 
-              var tableQuery = new storageTableQuery().where('PartitionKey eq ?', lastName);
+              var tableQuery = new storageTableQuery()
+                .top(segmentSize)
+                .where('PartitionKey eq ?', lastName);
 
-              runPageQuery(pageSize, tableQuery, null, function () {
+              runPageQuery(tableQuery, null, function () {
+
+                if (error) return callback(error);
+
                 storageClient.deleteTable(tableName, function (error, response) {
                   if (error) return callback(error);
 
@@ -130,14 +141,12 @@ function basicTableOperations(callback) {
 * Runs a table query with specific page size and continuationToken
 * @ignore 
 * 
-* @param {int}                    pageSize          Number of entities returned by single query 
 * @param {TableQuery}             tableQuery        Query to execute
 * @param {TableContinuationToken} continuationToken Continuation token to continue a query
 * @param {function}               callback          Additional sample operations to run after this one completes   
 */
-function runPageQuery(pageSize, tableQuery, continuationToken, callback) {
+function runPageQuery(tableQuery, continuationToken, callback) {
 
-  tableQuery.TakeCount = pageSize;
   storageClient.queryEntities(tableName, tableQuery, continuationToken, function (error, result) {
     if (error) return callback(error);
 
@@ -148,7 +157,7 @@ function runPageQuery(pageSize, tableQuery, continuationToken, callback) {
 
     continuationToken = result.continuationToken;
     if (continuationToken) {
-      runPageQuery(pageSize, tableQuery, continuationToken, callback);
+      runPageQuery(tableQuery, continuationToken, callback);
     } else {
       console.log("   Query completed.");
       callback();
