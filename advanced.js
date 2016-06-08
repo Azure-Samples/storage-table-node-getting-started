@@ -148,14 +148,14 @@ function listTables(prefix, tableService, token, options, tables, callback) {
 
   tableService.listTablesSegmentedWithPrefix(prefix, token, options, function (error, result) {
 
-    if (error) return callback(error, null, tableService);
+    if (error) return callback(error, null);
 
     tables.push.apply(tables, result.entries);
 
     var token = result.continuationToken;
 
     if (token) {
-      console.log('   Received a segment of results. There are ' + result.entries.length + ' tables on this page.');
+      console.log('   Received a segment of results. There are ' + result.entries.length + ' tables on this segment.');
       listTables(prefix, tableService, token, options, callback);
     } else {
       console.log('   Completed listing. There are ' + tables.length + ' tables.');
