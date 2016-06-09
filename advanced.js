@@ -73,11 +73,9 @@ function tableOperationsWithSas(callback) {
       console.log("   Create Table operation executed successfuly for: ", tableName);
     }
 
-    var startDate = new Date();
-    var expiryDate = new Date(startDate);
+    var expiryDate = new Date();
 
-    startDate.setMinutes(startDate.getMinutes() - 5);
-    expiryDate.setMinutes(startDate.getMinutes() + 30);
+    expiryDate.setMinutes(expiryDate.getMinutes() + 30);
 
     var sharedAccessPolicy = {
       AccessPolicy: {
@@ -85,7 +83,6 @@ function tableOperationsWithSas(callback) {
         + storage.TableUtilities.SharedAccessPermissions.ADD
         + storage.TableUtilities.SharedAccessPermissions.UPDATE
         + storage.TableUtilities.SharedAccessPermissions.DELETE,
-        Start: startDate,
         Expiry: expiryDate
       },
     };
