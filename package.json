@@ -23,8 +23,8 @@
     "start": "node tableSample.js"
   },
   "dependencies": {
-    "azure-storage": "^0.5.0",
-	"node-uuid": "~1.4.0"
+    "azure-storage": "0.10.0",
+    "node-uuid": "~1.4.0"
   },  
   "homepage": "https://github.com/Azure-Samples/storage-table-node-getting-started",
   "repository": {
