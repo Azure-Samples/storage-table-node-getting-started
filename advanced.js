@@ -21,21 +21,31 @@ var config = require('./config.js');
 
 var entityGen;
 var tableService;
-var tableName;
 
 function AdvancedAzureTableSamples() {
   entityGen = storage.TableUtilities.entityGenerator;
   tableService = storage.createTableService(config.connectionString);
-  tableName = "Customers" + guid.v1().replace(/-/g, '');
 
   return scenarios = [
     {
       action: listAllTables,
-      message: 'Azure Table Advanced Sample\n'
+      message: 'Azure Table List Sample\n'
     },
     {
       action: tableOperationsWithSas,
       message: 'Azure Table Operations with SAS\n'
+    },
+    {
+      action: corsRules,
+      message: 'Table CORS Sample\n'
+    },
+    {
+      action: serviceProperties,
+      message: 'Table Service Properties Sample\n'
+    },
+    {
+      action: tableAcl,
+      message: 'Table Access Policy Sample\n'
     }
   ];
 }
@@ -65,7 +75,8 @@ function listAllTables(callback) {
 };
 
 function tableOperationsWithSas(callback) {
-  // Create or reference an existing table 
+  // Create or reference an existing table
+  var tableName = "Customers" + guid.v1().replace(/-/g, ''); 
   tableService.createTableIfNotExists(tableName, function tableCreated(error, createResult) {
     if (error) return callback(error);
 
@@ -123,6 +134,154 @@ function tableOperationsWithSas(callback) {
     });
   });
 };
+
+
+// Get Cors properties, change them and revert back to original
+function corsRules(callback) {
+
+  console.log('Get service properties');
+  tableService.getServiceProperties(function (error, properties) {
+    if (error) return callback(error);
+
+    console.log('Set Cors rules in the service properties');
+
+    // Keeps the original Cors rules
+    var originalCors = properties.Cors;
+
+    properties.Cors = {
+      CorsRule: [{
+        AllowedOrigins: ['*'],
+        AllowedMethods: ['POST', 'GET', 'HEAD', 'PUT'],
+        AllowedHeaders: ['*'],
+        ExposedHeaders: ['*'],
+        MaxAgeInSeconds: 3600
+      }]
+    };
+
+    tableService.setServiceProperties(properties, function (error) {
+      if (error) return callback(error);
+
+      console.log('Cors rules set successfuly');
+
+      // reverts the cors rules back to the original ones so they do not get corrupted by the ones set in this sample
+      properties.Cors = originalCors;
+
+      tableService.setServiceProperties(properties, function (error) {
+        return callback(error);
+      });
+
+    });
+  });
+}
+
+
+// Manage logging and metrics service properties
+function serviceProperties(callback) {
+  // Create a blob client for interacting with the blob service from connection string
+  // How to create a storage connection string - http://msdn.microsoft.com/en-us/library/azure/ee758697.aspx
+  var blobService = storage.createBlobService(config.connectionString);
+
+  console.log('Get service properties');
+  blobService.getServiceProperties(function (error, properties) {
+    if (error) return callback(error);
+
+    var originalProperties = properties;
+
+    properties = serviceProperties = {
+      Logging: {
+        Version: '1.0',
+        Delete: true,
+        Read: true,
+        Write: true,
+        RetentionPolicy: {
+          Enabled: true,
+          Days: 10,
+        },
+      },
+      HourMetrics: {
+        Version: '1.0',
+        Enabled: true,
+        IncludeAPIs: true,
+        RetentionPolicy: {
+          Enabled: true,
+          Days: 10,
+        },
+      },
+      MinuteMetrics: {
+        Version: '1.0',
+        Enabled: true,
+        IncludeAPIs: true,
+        RetentionPolicy: {
+          Enabled: true,
+          Days: 10,
+        },
+      }
+    };
+
+    console.log('Set service properties');
+    blobService.setServiceProperties(properties, function (error) {
+      if (error) return callback(error);
+
+      // reverts the cors rules back to the original ones so they do not get corrupted by the ones set in this sample
+      blobService.setServiceProperties(originalProperties, function (error) {
+        return callback(error);
+      });
+    });
+  });
+}
+
+// Retrieve statistics related to replication for the Table service
+function serviceStats(callback) {
+  
+  console.log('Get service statistics');
+  tableService.getServiceStats(function (error, serviceStats){
+    if (error) return callback(error);
+
+    callback(null);
+  });
+
+}
+
+// Manage access policies of the table
+function tableAcl(callback) {
+  var tableName = "AclTable" + guid.v1().replace(/-/g, '');
+  console.log('Create table');
+  tableService.createTableIfNotExists(tableName, function() {
+    
+    // Set access policy
+    var expiryDate = new Date();
+    expiryDate.setMinutes(expiryDate.getMinutes() + 10);
+    var id = 'sampleIDForTablePolicy';
+
+    var sharedAccessPolicy = {
+      sampleIDForTablePolicy: {
+        Permissions: storage.TableUtilities.SharedAccessPermissions.PROCESS,
+        Expiry: expiryDate
+      }
+    };
+
+    console.log('Set table access policy');
+    tableService.setTableAcl(tableName, sharedAccessPolicy, function (error, result, response) {
+      if (error) return callback(error);
+
+      // Get access policy
+      console.log('Get table access policy');
+      tableService.getTableAcl(tableName, function(error, result, response) {
+        if (error) return callback(error);
+
+        console.log(' Permissions: ' + result.signedIdentifiers.sampleIDForTablePolicy.Permissions);
+        console.log(' Expiry: ' + result.signedIdentifiers.sampleIDForTablePolicy.Expiry.toISOString());
+
+        console.log('Delete table');
+        tableService.deleteTable(tableName, function () {
+          callback(error);
+        });
+      });
+    });
+  });
+}
+
+
 
 /**
 * Lists tables in the container.

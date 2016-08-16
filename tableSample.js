@@ -58,7 +58,8 @@ function runAzureTableSamples() {
     if (error) {
       throw error;
     } else {
-      console.log(scenarios[current].message);
+      if (current < scenarios.length)
+        console.log(scenarios[current].message);
 
       current++;
       if (current < scenarios.length) {
