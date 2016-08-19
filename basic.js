@@ -39,7 +39,7 @@ function BasicAzureTableSamples() {
 
 function basicTableOperations(callback) {
   // Create or reference an existing table 
-  storageClient.createTableIfNotExists(tableName, function tableCreated(error, createResult) {
+  storageClient.createTableIfNotExists(tableName, function (error, createResult) {
     if (error) return callback(error);
 
     if (createResult.isSuccessful) {
@@ -105,7 +105,7 @@ function basicTableOperations(callback) {
               .where('PartitionKey eq ?', lastName)
               .and('RowKey gt ?', "0001").and('RowKey le ?', "0075");
 
-            runPageQuery(tableQuery, null, function (error) {
+            runPageQuery(tableQuery, null, function (error, result) {
 
               if (error) return callback(error);
 
@@ -152,7 +152,7 @@ function runPageQuery(tableQuery, continuationToken, callback) {
 
     var entities = result.entries;
     entities.forEach(function (entity) {
-      console.log("  Customer: %s,%s,%s,%s", entity.PartitionKey._, entity.RowKey._, entity.email._, entity.phone._)
+      console.log("  Customer: %s,%s,%s,%s,%s,%s,%s", entity.PartitionKey._, entity.RowKey._, entity.email._, entity.phone._, entity.since._, entity.isEnterprise._, entity.code._)
     });
 
     continuationToken = result.continuationToken;
@@ -199,7 +199,10 @@ function createCustomerEntityDescriptor(partitionKey, rowKey, email, phone) {
     PartitionKey: entityGen.String(partitionKey),
     RowKey: entityGen.String(rowKey),
     email: entityGen.String(email),
-    phone: entityGen.String(phone)
+    phone: entityGen.String(phone),
+    code: entityGen.Int32(1),
+    isEnterprise: entityGen.Boolean(false),
+    since: entityGen.DateTime(new Date(Date.UTC(2011, 10, 25))),
   };
   return customerEntity;
 }

@@ -14,8 +14,8 @@
 // places, or events is intended or should be inferred.
 //----------------------------------------------------------------------------------
 
-basicScenarios = require('./basic.js');
-advancedScenarios = require('./advanced.js');
+var basicScenarios = require('./basic.js');
+var advancedScenarios = require('./advanced.js');
 
 /**
 * Azure Table Service Sample - Demonstrate how to perform common tasks using the Microsoft Azure Table storage 
@@ -45,10 +45,8 @@ function runAzureTableSamples() {
    *      Open the app.config file and comment out the connection string for the emulator ("useDevelopmentStorage":true) and
    *      set the connection string for the storage service.
    *
-   * Note: The Shared Access Signature sample currently does not work with Emulator for a well know issue in the azure-storage library. If you are planning to run
-   * this sample, please use the Storage Service.
    */
-  console.log('\nAzure Table Sample\n');
+  console.log('\nAzure Table Samples\n');
 
   var scenarios = basicScenarios.concat(advancedScenarios);
 

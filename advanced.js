@@ -222,7 +222,7 @@ function serviceProperties(callback) {
     blobService.setServiceProperties(properties, function (error) {
       if (error) return callback(error);
 
-      // reverts the cors rules back to the original ones so they do not get corrupted by the ones set in this sample
+      // reverts the service properties back to the original ones so they do not get corrupted by the ones set in this sample
       blobService.setServiceProperties(originalProperties, function (error) {
         return callback(error);
       });
@@ -251,7 +251,6 @@ function tableAcl(callback) {
     // Set access policy
     var expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
-    var id = 'sampleIDForTablePolicy';
 
     var sharedAccessPolicy = {
       sampleIDForTablePolicy: {
