@@ -24,7 +24,7 @@
     "check": "jshint tableSample.js"
   },
   "dependencies": {
-    "azure-storage": "~1.1.0",
+    "azure-storage": "~2.5.0",
 	"node-uuid": "~1.4.0"
   },
   "devDependencies": {
