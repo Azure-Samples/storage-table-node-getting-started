@@ -26,7 +26,7 @@ function AdvancedAzureTableSamples() {
   entityGen = storage.TableUtilities.entityGenerator;
   tableService = storage.createTableService(config.connectionString);
 
-  return scenarios = [
+   scenarios = [
     {
       action: listAllTables,
       message: 'Azure Table List Sample\n'
@@ -34,7 +34,10 @@ function AdvancedAzureTableSamples() {
     {
       action: tableOperationsWithSas,
       message: 'Azure Table Operations with SAS\n'
-    },
+    }
+  ];
+
+  advancedAzureStorageTablesScenarios = [
     {
       action: corsRules,
       message: 'Table CORS Sample\n'
@@ -48,7 +51,14 @@ function AdvancedAzureTableSamples() {
       message: 'Table Access Policy Sample\n'
     }
   ];
+ 
+  allScenarios = scenarios
+  if (!config.connectionString.includes('table.cosmosdb')){
+    allScenarios = scenarios.concat(advancedAzureStorageTablesScenarios);
+  }
+  return allScenarios;
 }
+
 
 function listAllTables(callback) {
   tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g, ''), function (error, created) {
@@ -81,7 +91,7 @@ function tableOperationsWithSas(callback) {
     if (error) return callback(error);
 
     if (createResult.isSuccessful) {
-      console.log("   Create Table operation executed successfuly for: ", tableName);
+      console.log("1. Create Table operation executed successfully for: ", tableName);
     }
 
     var expiryDate = new Date();
