@@ -91,7 +91,7 @@ function tableOperationsWithSas(callback) {
     if (error) return callback(error);
 
     if (createResult.isSuccessful) {
-      console.log("   Create Table operation executed successfuly for: ", tableName);
+      console.log("1. Create Table operation executed successfully for: ", tableName);
     }
 
     var expiryDate = new Date();
