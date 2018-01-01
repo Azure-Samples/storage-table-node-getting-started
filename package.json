@@ -40,6 +40,5 @@
   },
   "bugs": {
     "url": "https://github.com/Azure-Samples/storage-table-node-getting-started/issues"
-  },
-  "readmeFilename": "README.md"
+  }
 }
