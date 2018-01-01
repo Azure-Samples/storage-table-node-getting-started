@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------------------
 
 var fs = require('fs');
-var guid = require('node-uuid');
+var guid = require('uuid/v1');
 var storage = require('azure-storage');
 var config = require('./config.js');
 
@@ -61,10 +61,10 @@ function AdvancedAzureTableSamples() {
 
 
 function listAllTables(callback) {
-  tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g, ''), function (error, created) {
+  tableService.createTableIfNotExists("Advanced" + guid().replace(/-/g, ''), function (error, created) {
     if (error) return callback(error);
 
-    tableService.createTableIfNotExists("Advanced" + guid.v1().replace(/-/g, ''), function (error, created) {
+    tableService.createTableIfNotExists("Advanced" + guid().replace(/-/g, ''), function (error, created) {
       if (error) return callback(error);
 
       listTables('Advanced', tableService, null, { maxResults: 100 }, null, function (error, tables) {
@@ -86,7 +86,7 @@ function listAllTables(callback) {
 
 function tableOperationsWithSas(callback) {
   // Create or reference an existing table
-  var tableName = "Customers" + guid.v1().replace(/-/g, ''); 
+  var tableName = "Customers" + guid.replace(/-/g, '');
   tableService.createTableIfNotExists(tableName, function tableCreated(error, createResult) {
     if (error) return callback(error);
 
@@ -254,7 +254,7 @@ function serviceStats(callback) {
 
 // Manage access policies of the table
 function tableAcl(callback) {
-  var tableName = "AclTable" + guid.v1().replace(/-/g, '');
+  var tableName = "AclTable" + guid().replace(/-/g, '');
   console.log('Create table');
   tableService.createTableIfNotExists(tableName, function() {
     

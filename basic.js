@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------------------
 
 var fs = require('fs');
-var guid = require('node-uuid');
+var guid = require('uuid/v1');
 var storage = require('azure-storage');
 var config = require('./config.js');
 
@@ -27,7 +27,7 @@ function BasicAzureTableSamples() {
 
   entityGen = storage.TableUtilities.entityGenerator;
   storageClient = storage.createTableService(config.connectionString);
-  tableName = "Customers" + guid.v1().replace(/-/g, '');
+  tableName = "Customers" + guid().replace(/-/g, '');
 
   return scenarios = [
     {
